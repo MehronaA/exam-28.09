@@ -55,25 +55,26 @@ public class ProductService(DataContext context) : IProductService
 
     public async Task<Result<ProductGetDto>> GetItemByIdAsync(int id)
     {
-        var exist = await context.Products
+        var dto = await context.Products
+        .AsNoTracking()
         .Include(p => p.Category)
-        .Include(p => p.Supplier)
-        .FirstOrDefaultAsync(p => p.Id == id);
-
-        if (exist == null)
+        .Include(p=>p.Supplier)
+        .Where(p => p.Id == id)
+        .Select(p => new ProductGetDto
         {
-            return Result<ProductGetDto>.Fail("Product not found", ErrorType.NotFound);
-        }
+            Id = p.Id,
+            Name = p.Name,
+            Price = p.Price,
+            QuantityInStock = p.QuantityInStock,
+            CategoryName = p.Category.Name,
+            SupplierName = p.Supplier.Name   
+        })
+        .FirstOrDefaultAsync();
 
-        return Result<ProductGetDto>.Ok(new ProductGetDto
-        {
-            Id = id,
-            Name = exist.Name,
-            Price = exist.Price,
-            QuantityInStock = exist.QuantityInStock,
-            CategoryName = exist.Category.Name,
-            SupplierName=exist.Supplier.Name
-        });
+    if (dto is null)
+        return Result<ProductGetDto>.Fail("Product not found", ErrorType.NotFound);
+
+    return Result<ProductGetDto>.Ok(dto);
     }
     public async Task<Result<ProductCreateResponseDto>> CreateItemAsync(ProductCreateDto dto)
     {

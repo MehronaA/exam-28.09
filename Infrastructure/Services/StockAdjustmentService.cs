@@ -38,14 +38,15 @@ public class StockAdjustmentService(DataContext context) : IStockAdjustmentServi
         {
             return Result<StockAdjustmentGetDto>.Fail("Product with this name already exists", ErrorType.Conflict);
         }
+            var result = new StockAdjustmentGetDto()
+            {
+                Id = exist.Id,
+                ProductId = exist.ProductId,
+                AdjustmentAmount = exist.AdjustmentAmount,
+                Reason = exist.Reason
+            };
 
-        return Result<StockAdjustmentGetDto>.Ok(new StockAdjustmentGetDto
-        {
-            Id = id,
-            ProductId = exist.ProductId,
-            AdjustmentAmount = exist.AdjustmentAmount,
-            Reason = exist.Reason
-        });
+        return Result<StockAdjustmentGetDto>.Ok(result);
         }
         catch (System.Exception)
         {
@@ -57,41 +58,62 @@ public class StockAdjustmentService(DataContext context) : IStockAdjustmentServi
     {
         try
         {
+
+            if (dto.ProductId <= 0)
+            {
+                return Result<StockAdjustmentCreateResponseDto>.Fail("ProductId is required", ErrorType.Validation);
+            }
+
+            if (dto.AdjustmentAmount == 0)
+            {
+                return Result<StockAdjustmentCreateResponseDto>.Fail("AdjustmentAmount must be non-zero", ErrorType.Validation);
+            }
+
             if (string.IsNullOrWhiteSpace(dto.Reason))
             {
                 return Result<StockAdjustmentCreateResponseDto>.Fail("Reason is required", ErrorType.Validation);
             }
 
-            var productExist = await context.Products.FindAsync(dto.ProductId);
+        var reason = dto.Reason.Trim();
+            if (reason.Length > 300)
+            {
+                return Result<StockAdjustmentCreateResponseDto>.Fail("Reason is too long (max 300)", ErrorType.Validation);
+            }
 
-            if (productExist == null)
+        var product = await context.Products.FirstOrDefaultAsync(p => p.Id == dto.ProductId);
+            if (product is null)
             {
                 return Result<StockAdjustmentCreateResponseDto>.Fail("Product not found", ErrorType.NotFound);
             }
 
-            productExist.QuantityInStock += dto.AdjustmentAmount;
-            
-
-            var adjustment = new StockAdjustment
+        var newQty = product.QuantityInStock + dto.AdjustmentAmount;
+            if (newQty < 0)
             {
-                ProductId = dto.ProductId,
-                AdjustmentAmount = dto.AdjustmentAmount,
-                Reason = dto.Reason,
-            };
+                return Result<StockAdjustmentCreateResponseDto>.Fail("Resulting stock cannot be negative", ErrorType.Conflict);
+            }
 
-            await context.StockAdjustments.AddAsync(adjustment);
-            await context.SaveChangesAsync();
+        var adjustment = new StockAdjustment
+        {
+            ProductId = dto.ProductId,
+            AdjustmentAmount = dto.AdjustmentAmount,
+            Reason = dto.Reason
+        };
 
-            var result = new StockAdjustmentCreateResponseDto
-            {
-                Id = adjustment.Id,
-                ProductId = adjustment.ProductId,
-                AdjustmentAmount = adjustment.AdjustmentAmount,
-                Reason = adjustment.Reason,
-                AdjustmentDate = adjustment.AdjustmentDate
-            };
+        await context.StockAdjustments.AddAsync(adjustment);
+        product.QuantityInStock = newQty;
 
-            return Result<StockAdjustmentCreateResponseDto>.Ok(result, "Stock adjusted successfully");
+        await context.SaveChangesAsync();
+
+        var result = new StockAdjustmentCreateResponseDto
+        {
+            Id = adjustment.Id,
+            ProductId = adjustment.ProductId,
+            AdjustmentAmount = adjustment.AdjustmentAmount,
+            Reason = adjustment.Reason,
+            AdjustmentDate = adjustment.AdjustmentDate
+        };
+
+        return Result<StockAdjustmentCreateResponseDto>.Ok(result, "Stock adjusted successfully");
 
         }
         catch (System.Exception)

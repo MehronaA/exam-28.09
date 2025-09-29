@@ -17,6 +17,7 @@ builder.Services.AddScoped<ISaleService,SaleService>();
 builder.Services.AddScoped<IStockAdjustmentService,StockAdjustmentService>();
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<ProductFilter>();
+builder.Services.AddScoped<IExtraService,ExtraService>();
 builder.Services.AddScoped<SaleFilter>();
 builder.Services.AddDbContext<DataContext>(opt =>
     opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));

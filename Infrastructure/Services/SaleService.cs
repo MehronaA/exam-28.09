@@ -99,6 +99,7 @@ public class SaleService(DataContext context) : ISaleService
             await context.Sales.AddAsync(newSale);
 
             product.QuantityInStock -= dto.QuantitySold;
+            await context.SaveChangesAsync();
 
             var result = await context.Sales
                 .Include(s => s.Product)

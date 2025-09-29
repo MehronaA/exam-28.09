@@ -73,18 +73,19 @@ public class SupplierService(DataContext context) : ISupplierService
             var newSupplier = new Supplier
             {
                 Name = dto.Name,
-                Phone = dto.Name
+                Phone = dto.Phone
             };
 
             await context.Suppliers.AddAsync(newSupplier);
             await context.SaveChangesAsync();
-
-            return Result<SupplierCreateResponseDto>.Ok(new SupplierCreateResponseDto
+            var result = new SupplierCreateResponseDto()
             {
                 Id = newSupplier.Id,
                 Name = newSupplier.Name,
                 Phone = newSupplier.Phone
-            });
+            };
+
+            return Result<SupplierCreateResponseDto>.Ok(result);
         
         }
         catch (System.Exception)
@@ -109,7 +110,7 @@ public class SupplierService(DataContext context) : ISupplierService
         {
             return Result<SupplierUpdateResponseDto>.Fail("Phone shouldn't have less than 7 charackters and more than 11 charackters", ErrorType.Validation);
         }
-        var exist = await context.Suppliers.FirstOrDefaultAsync(s => s.Name.ToLower() == dto.Name.Trim().ToLower());
+        var exist = await context.Suppliers.FindAsync(id);
         if (exist == null)
         {
             return Result<SupplierUpdateResponseDto>.Fail("Supplier doesn't exist", ErrorType.NotFound);

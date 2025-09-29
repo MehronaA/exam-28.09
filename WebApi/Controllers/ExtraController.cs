@@ -9,14 +9,14 @@ namespace WebApi.Controllers;
 [Route("api/")]
 public class ExtraController(IExtraService _service) : ControllerBase
 {
-    [HttpGet("statistics")]
-    public async Task<IActionResult> GetProductsStatistics(CancellationToken ct)
+    [HttpGet("product-statistics")]
+    public async Task<IActionResult> GetProductsStatistics()
     {
         var result = await _service.ProductStatistic();
 
         if (!result.IsSuccess)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, result);
+            return StatusCode(500, result);
         }
 
         return Ok(result.Data);
@@ -70,7 +70,7 @@ public class ExtraController(IExtraService _service) : ControllerBase
     public async Task<IActionResult> GetTop()
     {
         var result = await _service.TopSaleProduct();
-        if (!result.IsSuccess) return StatusCode(500, result);
+        if (!result.IsSuccess) return StatusCode(500, result.Message);
         return Ok(result.Data);
     }
 
@@ -91,7 +91,7 @@ public class ExtraController(IExtraService _service) : ControllerBase
         var result = await _service.LowStockProduct();
 
         if (!result.IsSuccess)
-            return StatusCode(StatusCodes.Status500InternalServerError, result);
+            return StatusCode(500, result);
 
         return Ok(result.Data);
     }
@@ -126,7 +126,7 @@ public class ExtraController(IExtraService _service) : ControllerBase
     {
         var result = await _service.DailyRevenue();
         if (!result.IsSuccess)
-            return StatusCode(StatusCodes.Status500InternalServerError, result);
+            return StatusCode(500, result);
 
 
         return Ok(result);
