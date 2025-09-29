@@ -9,7 +9,7 @@ namespace Infrastructure.Interfaces;
 public interface ICategoryService
 {
     Task<Result<IEnumerable<CategoryGetDto>>> GetItemsAsync();
-    Task<Result<CategoryGetDto>> GetItemById(int id);
+    Task<Result<CategoryGetDto>> GetItemByIdAsync(int id);
     Task<Result<CategoryCreateResponseDto>> CreateItemAsync(CategoryCreateDto dto);
     Task<Result<CategoryUpdateResponseDto>> UpdateItemAsync(int id, CategoryUpdateDto dto);
     Task<Result<string>> DeleteItemAsync(int id);

@@ -7,7 +7,7 @@ namespace Infrastructure.Interfaces;
 
 public interface IProductService
 {
-    Task<PageResult<List<ProductGetDto>>> GetFilteredAsync(ProductFilter filter);
+    Task<PageResult<IEnumerable<ProductGetDto>>> GetFilteredItemsAsync(ProductFilter filter);
     Task<Result<ProductGetDto>> GetItemByIdAsync(int id);
     Task<Result<ProductCreateResponseDto>> CreateItemAsync(ProductCreateDto dto);
     Task<Result<ProductUpdateResponceDto>> UpdateItemAsync(int id,ProductUpdateDto dto);
