@@ -26,6 +26,8 @@ public class StockAdjustment(IStockAdjustmentService service ):ControllerBase
             return result.ErrorType switch
             {
                 ErrorType.NotFound => NotFound(result.Message),
+                ErrorType.Validation=>BadRequest(result.Message),
+                ErrorType.Conflict=>Conflict(result.Message),
                 _ => StatusCode(500, "An unexpeted error occured.")
             };
         }
