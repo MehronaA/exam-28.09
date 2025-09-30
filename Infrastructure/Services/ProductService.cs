@@ -2,6 +2,8 @@ using System;
 using System.Security.Cryptography;
 using Domain.DTOs.Categories;
 using Domain.DTOs.Products;
+using Domain.DTOs.Sale;
+using Domain.DTOs.StockAdjustment;
 using Domain.Entities;
 using Domain.Filters;
 using Infrastructure.APIResult;
@@ -16,14 +18,15 @@ public class ProductService(DataContext context) : IProductService
 {
     public async Task<PageResult<IEnumerable<ProductGetDto>>> GetFilteredItemsAsync(ProductFilter filter)
     {
-       
+
         var query = context.Products.Where(p => p.QuantityInStock > 0).AsQueryable();
 
         var totalCount = query.Count();
 
         if (filter.Keyword != null)
         {
-            query = query.Where(p => EF.Functions.Like($"%{p.Name.ToLower()}%", filter.Keyword.ToLower().Trim()));
+            query = query.Where(c => EF.Functions.Like(c.Name.ToLower(), $"%{filter.Keyword}%"));
+
         }
 
         if (filter.MinPrice != null)
@@ -58,7 +61,7 @@ public class ProductService(DataContext context) : IProductService
         var dto = await context.Products
         .AsNoTracking()
         .Include(p => p.Category)
-        .Include(p=>p.Supplier)
+        .Include(p => p.Supplier)
         .Where(p => p.Id == id)
         .Select(p => new ProductGetDto
         {
@@ -67,14 +70,14 @@ public class ProductService(DataContext context) : IProductService
             Price = p.Price,
             QuantityInStock = p.QuantityInStock,
             CategoryName = p.Category.Name,
-            SupplierName = p.Supplier.Name   
+            SupplierName = p.Supplier.Name
         })
         .FirstOrDefaultAsync();
 
-    if (dto is null)
-        return Result<ProductGetDto>.Fail("Product not found", ErrorType.NotFound);
+        if (dto is null)
+            return Result<ProductGetDto>.Fail("Product not found", ErrorType.NotFound);
 
-    return Result<ProductGetDto>.Ok(dto);
+        return Result<ProductGetDto>.Ok(dto);
     }
     public async Task<Result<ProductCreateResponseDto>> CreateItemAsync(ProductCreateDto dto)
     {
@@ -86,12 +89,12 @@ public class ProductService(DataContext context) : IProductService
             }
 
             if (dto.Name.Trim().Length > 100 || dto.Name.Trim().Length < 2)
-            { 
+            {
                 return Result<ProductCreateResponseDto>.Fail("Name shouldn't have less than 2 charackters and more than 100 charackters", ErrorType.Validation);
             }
 
             if (dto.Price < 0)
-            { 
+            {
                 return Result<ProductCreateResponseDto>.Fail("Price cannot be negative", ErrorType.Validation);
             }
             if (dto.QuantityInStock < 0)
@@ -126,7 +129,7 @@ public class ProductService(DataContext context) : IProductService
                 Price = dto.Price,
                 CategoryId = dto.CategoryId,
                 SupplierId = dto.SupplierId,
-                QuantityInStock= dto.QuantityInStock
+                QuantityInStock = dto.QuantityInStock
             };
 
             await context.Products.AddAsync(newProduct);
@@ -152,7 +155,7 @@ public class ProductService(DataContext context) : IProductService
         {
             return Result<ProductCreateResponseDto>.Fail("Internal server error", ErrorType.Internal);
         }
-        
+
     }
     public async Task<Result<ProductUpdateResponceDto>> UpdateItemAsync(int id, ProductUpdateDto dto)
     {
@@ -252,5 +255,134 @@ public class ProductService(DataContext context) : IProductService
 
     }
 
+    public async Task<Result<GetProductsDetailsDto>> ProductDetails(int id)
+    {
+        try
+        {
+            var product = await context.Products
+                .AsNoTracking()
+                .Where(p => p.Id == id)
+                .Select(p => new GetProductsDetailsDto
+                {
+                    ProductId = p.Id,
+                    ProductName = p.Name,
+                    Price = p.Price,
+                    QuantityInStock = p.QuantityInStock,
+                    Supplier = p.Supplier.Name,
+                    Sales = p.Sales.Select(s => new SaleGetDto
+                    {
+                        QuantitySold = s.QuantitySold,
+                        SaleDate = s.SaleDate
+                    }).ToList(),
+                    StockAdjustments = p.StockAdjustments.Select(a => new StockAdjustmentGetDto
+                    {
+                        AdjustmentAmount = a.AdjustmentAmount,
+                        AdjustmentDate = a.AdjustmentDate,
+                        Reason = a.Reason
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+
+            if (product is null)
+            {
+                return Result<GetProductsDetailsDto>.Fail("Product not found", ErrorType.NotFound);
+            }
+
+            return Result<GetProductsDetailsDto>.Ok(product);
+        }
+        catch (Exception)
+        {
+            return Result<GetProductsDetailsDto>.Fail("Internal server error", ErrorType.Internal);
+        }
+    }
+    public async Task<Result<IEnumerable<LowStockProductsDto>>> LowStockProduct()
+    {
+        try
+        {
+            var products = await context.Products
+                .AsNoTracking()
+                .Where(p => p.QuantityInStock < 5)
+                .Select(p => new LowStockProductsDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    QuantityInStock = p.QuantityInStock
+                })
+                .ToListAsync();
+
+            return Result<IEnumerable<LowStockProductsDto>>.Ok(products);
+        }
+        catch (Exception)
+        {
+            return Result<IEnumerable<LowStockProductsDto>>.Fail("Internal server error", ErrorType.Internal);
+        }
+    }
+    public async Task<Result<ProductsStatisticsDto>> ProductStatistic()
+    {
+        try
+        {
+            var totalProducts = await context.Products.CountAsync();
+
+            decimal averagePrice = 0;
+            if (totalProducts > 0)
+            {
+                averagePrice = await context.Products.AverageAsync(p => p.Price);
+            }
+
+            var totalSold = await context.Sales.SumAsync(s => s.QuantitySold);
+
+            var dto = new ProductsStatisticsDto
+            {
+                TotalProducts = totalProducts,
+                AveragePrice = averagePrice,
+                TotalSold = totalSold
+            };
+
+            return Result<ProductsStatisticsDto>.Ok(dto);
+        }
+        catch (Exception)
+        {
+            return Result<ProductsStatisticsDto>.Fail("Internal server error", ErrorType.Internal);
+        }
+
+    }
+        public async Task<Result<IEnumerable<ProductsWithTimeIntervalDto>>> ProductsWithDate(DateTime startDate, DateTime endDate)
+    {
+        try
+    {
+            if (endDate < startDate)
+            {
+                return Result<IEnumerable<ProductsWithTimeIntervalDto>>.Fail("endDate must be >= startDate", ErrorType.Validation);
+            }
+
+        var start = startDate.Date;
+        var end = endDate.Date.AddDays(1);
+
+        var items = await context.Sales
+            .AsNoTracking()
+            .Where(s => s.SaleDate >= start && s.SaleDate < end)
+            .OrderBy(s => s.SaleDate)
+            .Select(s => new ProductsWithTimeIntervalDto
+            {
+                Id = s.Id,                    
+                ProductName = s.Product.Name,
+                QuantitySold = s.QuantitySold,
+                SaleDate = s.SaleDate
+            })
+            .ToListAsync();
+
+        return Result<IEnumerable<ProductsWithTimeIntervalDto>>.Ok(items);
+    }
+    catch
+    {
+        return Result<IEnumerable<ProductsWithTimeIntervalDto>>.Fail("Internal server error", ErrorType.Internal);
+    }
+    }
+
+
+
+
+
+    
 
 }

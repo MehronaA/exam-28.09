@@ -7,28 +7,35 @@ using Infrastructure.Enum;
 using Microsoft.EntityFrameworkCore;
 using Domain.Entities;
 using System.Linq.Expressions;
+using Domain.Filters;
+using System.ComponentModel.Design;
+using Domain.DTOs.Products;
 
 namespace Infrastructure.Services;
 
 public class CategoryService(DataContext context) : ICategoryService
 {
-    public async Task<Result<IEnumerable<CategoryGetDto>>> GetItemsAsync()
+
+
+    public async Task<PageResult<IEnumerable<CategoryGetDto>>> GetFilteredItemsAsync(CategoryFilter filter)
     {
-        try
+
+        var query = context.Categories.AsQueryable();
+        var totalCount = query.Count();
+        if (filter.Keyword != null)
         {
-            var items = await context.Categories.Select(c => new CategoryGetDto
-            {
-                Id = c.Id,
-                Name = c.Name
-            }).ToListAsync();
-            return Result<IEnumerable<CategoryGetDto>>.Ok(items);
+            query = query.Where(c => EF.Functions.Like(c.Name.ToLower(), $"%{filter.Keyword}%"));
         }
-        catch (System.Exception)
+
+        var items = await query
+        .Skip((filter.Page - 1) * filter.Size)
+        .Take(filter.Size)
+        .Select(c => new CategoryGetDto()
         {
-            return Result<IEnumerable<CategoryGetDto>>.Fail("Internal server error", ErrorType.Internal);
-        }
-        
-       
+            Id = c.Id,
+            Name = c.Name
+        }).ToListAsync();
+        return PageResult<IEnumerable<CategoryGetDto>>.Ok(items, filter.Page, filter.Size, totalCount);
 
     }
     public async Task<Result<CategoryGetDto>> GetItemByIdAsync(int id)
@@ -54,8 +61,8 @@ public class CategoryService(DataContext context) : ICategoryService
         {
             return Result<CategoryGetDto>.Fail("Internal server error", ErrorType.Internal);
         }
-        
-        
+
+
 
     }
     public async Task<Result<CategoryCreateResponseDto>> CreateItemAsync(CategoryCreateDto dto)
@@ -115,13 +122,13 @@ public class CategoryService(DataContext context) : ICategoryService
             exist.Name = dto.Name.Trim();
             await context.SaveChangesAsync();
             return Result<CategoryUpdateResponseDto>.Ok(new CategoryUpdateResponseDto { Id = id, Name = exist.Name });
-            
+
         }
         catch (System.Exception)
         {
             return Result<CategoryUpdateResponseDto>.Fail("Internal server error", ErrorType.Internal);
         }
-        
+
     }
     public async Task<Result<string>> DeleteItemAsync(int id)
     {
@@ -143,6 +150,35 @@ public class CategoryService(DataContext context) : ICategoryService
         {
             return Result<string>.Fail("Internal server error", ErrorType.Internal);
         }
-        
+
     }
+    public async Task<Result<IEnumerable<CategoryWithProducts>>> CategoryWithProducts()
+    {
+        try
+    {
+        var categories = await context.Categories
+            .AsNoTracking()
+            .Include(c => c.Products) 
+            .Select(c => new CategoryWithProducts
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Products = c.Products.Select(p => new ProductGetDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Price= p.Price
+                }).ToList()
+            })
+            .ToListAsync();
+
+        return Result<IEnumerable<CategoryWithProducts>>.Ok(categories);
+    }
+    catch (Exception)
+    {
+        return Result<IEnumerable<CategoryWithProducts>>.Fail("Internal server error", ErrorType.Internal);
+    }
+    }
+
+
 }

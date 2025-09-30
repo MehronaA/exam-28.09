@@ -2,7 +2,7 @@ using System;
 using Domain.DTOs.Products;
 using Domain.Entities;
 
-namespace Domain.DTOs.Extra;
+namespace Domain.DTOs.Categories;
 
 public class CategoryWithProducts
 {

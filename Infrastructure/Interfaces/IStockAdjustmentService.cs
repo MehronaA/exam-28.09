@@ -12,4 +12,6 @@ public interface IStockAdjustmentService
     Task<Result<StockAdjustmentCreateResponseDto>> CreateItemAsync(StockAdjustmentCreateDto dto);
     Task<Result<StockAdjustmentUpdateResponseDto>> UpdateItemAsync(int id, StockAdjustmentUpdateDto dto);
     Task<Result<string>> DeleteItemAsync(int id);
+    Task<Result<IEnumerable<StockAdjustmentHistoryDto>>> StockAdjustmentHistory(int id);
+
 }

@@ -1,5 +1,6 @@
 using System;
 using Domain.Entities;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -126,14 +127,14 @@ public class DataContext : DbContext
         .HasMaxLength(11)
         .IsRequired();
 
-        
-        
-        
-        
 
 
 
-        
+
+
+
+
+
 
 
 

@@ -30,6 +30,16 @@ public class SupplierController(ISupplierService service):ControllerBase
         }
         return Ok(result.Data);
     }
+    [HttpGet("supplier-with-products")]
+    public async Task<IActionResult> GetSuppliersWithProducts()
+    {
+        var result = await service.SupplierWithProducts();
+
+        if (!result.IsSuccess)
+            return StatusCode(StatusCodes.Status500InternalServerError, result);
+
+        return Ok(result.Data);
+    }
     [HttpPost]
     public async Task<IActionResult> CreateItemAsync(SupplierCreateDto dto)
     {

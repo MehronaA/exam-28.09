@@ -11,4 +11,6 @@ public interface ISupplierService
     Task<Result<SupplierCreateResponseDto>> CreateItemAsync(SupplierCreateDto dto);
     Task<Result<SupplierUpdateResponseDto>> UpdateItemAsync(int id, SupplierUpdateDto dto);
     Task<Result<string>> DeleteItemAsync(int id);
+    Task<Result<IEnumerable<SupplierWithProductsDto>>> SupplierWithProducts();
+
 }

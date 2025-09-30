@@ -33,6 +33,59 @@ public class ProductController(IProductService service) : ControllerBase
         }
         return Ok(result.Data);
     }
+    [HttpGet("product-statistics")]
+    public async Task<IActionResult> GetProductsStatistics()
+    {
+        var result = await service.ProductStatistic();
+
+        if (!result.IsSuccess)
+        {
+            return StatusCode(500, result);
+        }
+
+        return Ok(result.Data);
+    }
+    [HttpGet("sales-by-date")]
+    public async Task<IActionResult> GetByDate([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+    {
+        var result = await service.ProductsWithDate(startDate, endDate);
+
+        if (!result.IsSuccess)
+        {
+            return result.ErrorType switch
+            {
+                ErrorType.Validation => BadRequest(result),
+                _ => StatusCode(StatusCodes.Status500InternalServerError, result)
+            };
+        }
+        return Ok(result);
+    }
+    [HttpGet("low-stock-products")]
+    public async Task<IActionResult> GetLowStockProducts()
+    {
+        var result = await service.LowStockProduct();
+
+        if (!result.IsSuccess)
+            return StatusCode(500, result);
+
+        return Ok(result.Data);
+    }
+    [HttpGet("details/{id:int}")]
+    public async Task<IActionResult> GetProductDetails(int id)
+    {
+        var result = await service.ProductDetails(id);
+
+        if (!result.IsSuccess)
+        {
+            return result.ErrorType switch
+            {
+                ErrorType.NotFound => NotFound(result),
+                _ => StatusCode(500, result)
+            };
+        }
+
+        return Ok(result.Data);
+    }
     [HttpPost]
     public async Task<IActionResult> CreateItemAsync(ProductCreateDto dto)
     {

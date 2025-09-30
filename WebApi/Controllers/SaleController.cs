@@ -32,6 +32,24 @@ public class SaleController(ISaleService service):ControllerBase
         }
         return Ok(result.Data);
     }
+    [HttpGet("top-sale-product")]
+    public async Task<IActionResult> GetTop()
+    {
+        var result = await service.TopSaleProduct();
+        if (!result.IsSuccess) return StatusCode(500, result.Message);
+        return Ok(result.Data);
+    }
+    [HttpGet("daily-revenue")]
+    public async Task<IActionResult> GetDailyRevenue()
+    {
+        var result = await service.DailyRevenue();
+        if (!result.IsSuccess)
+            return StatusCode(500, result);
+
+
+        return Ok(result);
+    }
+    
     [HttpPost]
     public async Task<IActionResult> CreateItemAsync(SaleCreateDto dto)
     {

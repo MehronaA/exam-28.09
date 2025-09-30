@@ -1,6 +1,7 @@
 using System;
 using System.Reflection.Emit;
 using Domain.DTOs.Categories;
+using Domain.Filters;
 using Infrastructure.Enum;
 using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -12,9 +13,9 @@ namespace WebApi.Controllers;
 public class CategoryController(ICategoryService service) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetItemsAsync()
+    public async Task<IActionResult> GetItemsAsync([FromQuery] CategoryFilter filter)
     {
-        var result = await service.GetItemsAsync();
+        var result = await service.GetFilteredItemsAsync(filter);
         if (!result.IsSuccess)
         {
             return StatusCode(500, "Failed");
@@ -33,6 +34,15 @@ public class CategoryController(ICategoryService service) : ControllerBase
                 _ => StatusCode(500, "An unexpeted error occured.")
             };
         }
+        return Ok(result.Data);
+    }
+    [HttpGet("category-with-products")]
+    public async Task<IActionResult> GetCategoriesWithProductsAsync()
+    {
+        var result = await service.CategoryWithProducts();
+        if (!result.IsSuccess)
+            return StatusCode(500, result);
+
         return Ok(result.Data);
     }
     [HttpPost]

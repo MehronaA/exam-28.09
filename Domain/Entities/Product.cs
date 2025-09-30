@@ -19,7 +19,7 @@ public class Product
     //navigation
     public Category Category { get; set; }
     public Supplier Supplier { get; set; }
-    public IEnumerable<Sale> Sales { get; set; }
-    public IEnumerable<StockAdjustment> StockAdjustments = [];
+    public List<Sale> Sales { get; set; }
+    public List<StockAdjustment> StockAdjustments = [];
 
 }

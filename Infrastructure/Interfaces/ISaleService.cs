@@ -13,4 +13,8 @@ public interface ISaleService
     Task<Result<SaleCreateResponseDto>> CreateItemAsync(SaleCreateDto dto);
     Task<Result<SaleUpdateResponseDto>> UpdateItemAsync(int id, SaleUpdateDto dto);
     Task<Result<string>> DeleteItemAsync(int id);
+    Task<Result<IEnumerable<ReportsDailyRevenueDto>>> DailyRevenue();
+    Task<Result<IEnumerable<SalesTopProductsDto>>> TopSaleProduct();
+
+
 }

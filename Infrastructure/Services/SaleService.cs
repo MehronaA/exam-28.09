@@ -32,10 +32,14 @@ public class SaleService(DataContext context) : ISaleService
         {
             query = query.Where(s => s.SaleDate < filter.EndDate);
         }
+        if (filter.Page < 1)
+        {
+            filter.Page = 1;
+        }
 
         var items = await query
         .Include(s => s.Product)
-        .Skip((filter.Page - 1) - filter.Size)
+        .Skip((filter.Page - 1) * filter.Size)
         .Take(filter.Size)
         .Select(s => new SaleGetDto()
         {
@@ -118,64 +122,64 @@ public class SaleService(DataContext context) : ISaleService
         {
             return Result<SaleCreateResponseDto>.Fail("Internal server error", ErrorType.Internal);
         }
-           
+
     }
     public async Task<Result<SaleUpdateResponseDto>> UpdateItemAsync(int id, SaleUpdateDto dto)
     {
         try
         {
             if (dto.QuantitySold <= 0)
-        {
-            return Result<SaleUpdateResponseDto>.Fail("QuantitySold cannot be negative", ErrorType.Validation);
-        }
+            {
+                return Result<SaleUpdateResponseDto>.Fail("QuantitySold cannot be negative", ErrorType.Validation);
+            }
 
-        var product = await context.Products.FirstOrDefaultAsync(p => p.Id == dto.ProductId);
+            var product = await context.Products.FirstOrDefaultAsync(p => p.Id == dto.ProductId);
 
-        if (product is null)
-        {
-            return Result<SaleUpdateResponseDto>.Fail("Product not found", ErrorType.NotFound);
-        }
+            if (product is null)
+            {
+                return Result<SaleUpdateResponseDto>.Fail("Product not found", ErrorType.NotFound);
+            }
 
-        if (product.QuantityInStock < dto.QuantitySold)
-        {
-            return Result<SaleUpdateResponseDto>.Fail("Insufficient stock", ErrorType.Conflict);
-        }
-        var exist = await context.Sales.FindAsync(id);
+            if (product.QuantityInStock < dto.QuantitySold)
+            {
+                return Result<SaleUpdateResponseDto>.Fail("Insufficient stock", ErrorType.Conflict);
+            }
+            var exist = await context.Sales.FindAsync(id);
 
-        if (exist == null)
-        {
-            return Result<SaleUpdateResponseDto>.Fail("Sale to update  does not exists", ErrorType.NotFound);
-        }
+            if (exist == null)
+            {
+                return Result<SaleUpdateResponseDto>.Fail("Sale to update  does not exists", ErrorType.NotFound);
+            }
 
-        var noChange = exist.ProductId == dto.ProductId && exist.QuantitySold == dto.QuantitySold;
+            var noChange = exist.ProductId == dto.ProductId && exist.QuantitySold == dto.QuantitySold;
 
-        if (noChange)
-        {
-            return Result<SaleUpdateResponseDto>.Fail("No changes were made", ErrorType.NoChange);
-        }
+            if (noChange)
+            {
+                return Result<SaleUpdateResponseDto>.Fail("No changes were made", ErrorType.NoChange);
+            }
 
-        exist.ProductId = dto.ProductId;
-        exist.QuantitySold = dto.QuantitySold;
-        await context.SaveChangesAsync();
-        var result = await context.Sales
-        .Include(s => s.Product)
-        .Where(s => s.Id == id)
-        .Select(s => new SaleUpdateResponseDto
-        {
-            Id = id,
-            ProductId = s.ProductId,
-            QuantitySold = s.QuantitySold,
-            SaleDate = s.SaleDate
-        }).FirstAsync();
-        
-        return Result<SaleUpdateResponseDto>.Ok(result);
+            exist.ProductId = dto.ProductId;
+            exist.QuantitySold = dto.QuantitySold;
+            await context.SaveChangesAsync();
+            var result = await context.Sales
+            .Include(s => s.Product)
+            .Where(s => s.Id == id)
+            .Select(s => new SaleUpdateResponseDto
+            {
+                Id = id,
+                ProductId = s.ProductId,
+                QuantitySold = s.QuantitySold,
+                SaleDate = s.SaleDate
+            }).FirstAsync();
+
+            return Result<SaleUpdateResponseDto>.Ok(result);
         }
         catch (System.Exception)
         {
             return Result<SaleUpdateResponseDto>.Fail("Internal server error", ErrorType.Internal);
         }
-        
-        
+
+
     }
     public async Task<Result<string>> DeleteItemAsync(int id)
     {
@@ -195,7 +199,63 @@ public class SaleService(DataContext context) : ISaleService
         catch (System.Exception)
         {
             return Result<string>.Fail("Internal server error", ErrorType.Internal);
-         
+
         }
     }
+    public async Task<Result<IEnumerable<ReportsDailyRevenueDto>>> DailyRevenue()
+    {
+        try
+        {
+            var today = DateTime.UtcNow.Date;
+            var start = today.AddDays(-7);
+
+            var grouped = await context.Sales
+                .AsNoTracking()
+                .Where(s => s.SaleDate >= start)
+                .GroupBy(s => s.SaleDate.Date)
+                .Select(g => new ReportsDailyRevenueDto
+                {
+                    Date = g.Key,
+                    Revenue = g.Sum(s => (decimal)s.QuantitySold * s.Product.Price)
+                })
+                .ToListAsync();
+
+            return Result<IEnumerable<ReportsDailyRevenueDto>>.Ok(grouped);
+        }
+        catch
+        {
+            return Result<IEnumerable<ReportsDailyRevenueDto>>.Fail("Internal server error", ErrorType.Internal);
+        }
+    }
+    
+    public async Task<Result<IEnumerable<SalesTopProductsDto>>> TopSaleProduct()
+    {
+        try
+        {
+
+            var items = await context.Sales
+                .AsNoTracking()
+                .GroupBy(s => s.Product.Name)
+                .Select(g => new SalesTopProductsDto
+                {
+                    ProductName = g.Key,
+                    TotalSold = g.Sum(x => x.QuantitySold)
+                })
+                .OrderByDescending(x => x.TotalSold)
+                .ThenBy(x => x.ProductName)
+                .Take(5)
+                .ToListAsync();
+
+            return Result<IEnumerable<SalesTopProductsDto>>.Ok(items);
+        }
+        catch
+        {
+            return Result<IEnumerable<SalesTopProductsDto>>.Fail("Internal server error", ErrorType.Internal);
+        }
+    }
+    
+
+
+
+
 }

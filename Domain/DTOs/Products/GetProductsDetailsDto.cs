@@ -4,7 +4,7 @@ using Domain.DTOs.Sale;
 using Domain.DTOs.StockAdjustment;
 using Domain.Entities;
 
-namespace Domain.DTOs.Extra;
+namespace Domain.DTOs.Products;
 
 public class GetProductsDetailsDto
 {

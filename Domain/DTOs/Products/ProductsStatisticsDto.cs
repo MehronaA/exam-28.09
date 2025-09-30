@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.Contracts;
 
-namespace Domain.DTOs.Extra;
+namespace Domain.DTOs.Products;
 
 public class ProductsStatisticsDto
 {

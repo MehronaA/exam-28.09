@@ -39,13 +39,13 @@ public class SupplierService(DataContext context) : ISupplierService
                 return Result<SupplierGetDto>.Fail("Supplier not found", ErrorType.NotFound);
             }
 
-            return Result<SupplierGetDto>.Ok(new SupplierGetDto { Id = id, Name = exist.Name, Phone = exist.Phone }); 
+            return Result<SupplierGetDto>.Ok(new SupplierGetDto { Id = id, Name = exist.Name, Phone = exist.Phone });
         }
         catch (System.Exception)
         {
             return Result<SupplierGetDto>.Fail("Internal server error", ErrorType.Internal);
         }
-        
+
     }
 
     public async Task<Result<SupplierCreateResponseDto>> CreateItemAsync(SupplierCreateDto dto)
@@ -86,7 +86,7 @@ public class SupplierService(DataContext context) : ISupplierService
             };
 
             return Result<SupplierCreateResponseDto>.Ok(result);
-        
+
         }
         catch (System.Exception)
         {
@@ -99,47 +99,47 @@ public class SupplierService(DataContext context) : ISupplierService
         try
         {
             if (string.IsNullOrWhiteSpace(dto.Name))
-        {
-            return Result<SupplierUpdateResponseDto>.Fail("Name is required", ErrorType.Validation);
-        }
-        if (dto.Name.Trim().Length > 150 || dto.Name.Trim().Length < 2)
-        {
-            return Result<SupplierUpdateResponseDto>.Fail("Name shouldn't have less than 2 charackters and more than 150 charackters", ErrorType.Validation);
-        }
-        if (dto.Phone.Trim().Length > 11 || dto.Phone.Trim().Length < 7)
-        {
-            return Result<SupplierUpdateResponseDto>.Fail("Phone shouldn't have less than 7 charackters and more than 11 charackters", ErrorType.Validation);
-        }
-        var exist = await context.Suppliers.FindAsync(id);
-        if (exist == null)
-        {
-            return Result<SupplierUpdateResponseDto>.Fail("Supplier doesn't exist", ErrorType.NotFound);
-        }
-        var noChange = exist.Name.ToLower() == dto.Name.Trim().ToLower() && exist.Phone == dto.Phone;
-        if (noChange)
-        {
-            return Result<SupplierUpdateResponseDto>.Fail("No changes were made", ErrorType.NoChange);
-        }
+            {
+                return Result<SupplierUpdateResponseDto>.Fail("Name is required", ErrorType.Validation);
+            }
+            if (dto.Name.Trim().Length > 150 || dto.Name.Trim().Length < 2)
+            {
+                return Result<SupplierUpdateResponseDto>.Fail("Name shouldn't have less than 2 charackters and more than 150 charackters", ErrorType.Validation);
+            }
+            if (dto.Phone.Trim().Length > 11 || dto.Phone.Trim().Length < 7)
+            {
+                return Result<SupplierUpdateResponseDto>.Fail("Phone shouldn't have less than 7 charackters and more than 11 charackters", ErrorType.Validation);
+            }
+            var exist = await context.Suppliers.FindAsync(id);
+            if (exist == null)
+            {
+                return Result<SupplierUpdateResponseDto>.Fail("Supplier doesn't exist", ErrorType.NotFound);
+            }
+            var noChange = exist.Name.ToLower() == dto.Name.Trim().ToLower() && exist.Phone == dto.Phone;
+            if (noChange)
+            {
+                return Result<SupplierUpdateResponseDto>.Fail("No changes were made", ErrorType.NoChange);
+            }
 
-        exist.Name = dto.Name.Trim();
-        exist.Phone = dto.Phone;
-        await context.SaveChangesAsync();
+            exist.Name = dto.Name.Trim();
+            exist.Phone = dto.Phone;
+            await context.SaveChangesAsync();
 
-        var result = new SupplierUpdateResponseDto
-        {
-            Id = id,
-            Name = exist.Name,
-            Phone = exist.Phone
-        };
-        return Result<SupplierUpdateResponseDto>.Ok(result);
-            
+            var result = new SupplierUpdateResponseDto
+            {
+                Id = id,
+                Name = exist.Name,
+                Phone = exist.Phone
+            };
+            return Result<SupplierUpdateResponseDto>.Ok(result);
+
         }
         catch (System.Exception)
         {
             return Result<SupplierUpdateResponseDto>.Fail("Internal server error", ErrorType.Internal);
-            
+
         }
-        
+
     }
     public async Task<Result<string>> DeleteItemAsync(int id)
     {
@@ -162,6 +162,30 @@ public class SupplierService(DataContext context) : ISupplierService
             return Result<string>.Fail("Internal server error", ErrorType.Internal);
         }
     }
+           public async Task<Result<IEnumerable<SupplierWithProductsDto>>> SupplierWithProducts()
+    {
+        try
+        {
+            var suppliers = await context.Suppliers
+                .AsNoTracking()
+                .Include(s => s.Products)
+                .Select(s => new SupplierWithProductsDto
+                {
+                    SupplierId = s.Id,
+                    SupplierName = s.Name,
+                    ProductName = s.Products.Select(p => p.Name).ToList()
+                })
+                .ToListAsync();
+
+            return Result<IEnumerable<SupplierWithProductsDto>>.Ok(suppliers);
+        }
+        catch
+        {
+            return Result<IEnumerable<SupplierWithProductsDto>>.Fail("Internal server error", ErrorType.Internal);
+        }
+    }
 
 
 }
+
+

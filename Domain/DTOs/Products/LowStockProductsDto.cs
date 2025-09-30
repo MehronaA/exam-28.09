@@ -1,6 +1,6 @@
 using System;
 
-namespace Domain.DTOs.Extra;
+namespace Domain.DTOs.Products;
 
 public class LowStockProductsDto
 {

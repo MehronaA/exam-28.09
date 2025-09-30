@@ -1,4 +1,5 @@
 using System;
+using Domain.DTOs.Products;
 using Domain.DTOs.StockAdjustment;
 using Domain.Entities;
 using Infrastructure.APIResult;
@@ -15,42 +16,43 @@ public class StockAdjustmentService(DataContext context) : IStockAdjustmentServi
     public async Task<Result<IEnumerable<StockAdjustmentGetDto>>> GetItemsAsync()
     {
         var items = await context.StockAdjustments
-        .Include(sa => sa.Product)
         .Select(sa => new StockAdjustmentGetDto
         {
             Id = sa.Id,
-            ProductId = sa.ProductId,
+            ProductName = sa.Product.Name,
             AdjustmentAmount = sa.AdjustmentAmount,
-            Reason = sa.Reason
+            Reason = sa.Reason,
+            AdjustmentDate = sa.AdjustmentDate,
         })
         .ToListAsync();
 
         return Result<IEnumerable<StockAdjustmentGetDto>>.Ok(items);
-    
+
     }
     public async Task<Result<StockAdjustmentGetDto>> GetItemByIdAsync(int id)
     {
         try
         {
-            var exist = await context.StockAdjustments.FindAsync(id);
+            var exist = await context.StockAdjustments.Include(sa => sa.Product).FirstOrDefaultAsync(sa => sa.Id == id);
 
-        if (exist == null)
-        {
-            return Result<StockAdjustmentGetDto>.Fail("Product with this name already exists", ErrorType.Conflict);
-        }
+            if (exist == null)
+            {
+                return Result<StockAdjustmentGetDto>.Fail("Product with this name already exists", ErrorType.Conflict);
+            }
             var result = new StockAdjustmentGetDto()
             {
                 Id = exist.Id,
-                ProductId = exist.ProductId,
+                ProductName = exist.Product.Name,
                 AdjustmentAmount = exist.AdjustmentAmount,
-                Reason = exist.Reason
+                Reason = exist.Reason,
+                AdjustmentDate = exist.AdjustmentDate
             };
 
-        return Result<StockAdjustmentGetDto>.Ok(result);
+            return Result<StockAdjustmentGetDto>.Ok(result);
         }
         catch (System.Exception)
         {
-            return Result<StockAdjustmentGetDto>.Fail("Internal server error", ErrorType.Internal); 
+            return Result<StockAdjustmentGetDto>.Fail("Internal server error", ErrorType.Internal);
         }
     }
 
@@ -58,7 +60,6 @@ public class StockAdjustmentService(DataContext context) : IStockAdjustmentServi
     {
         try
         {
-
             if (dto.ProductId <= 0)
             {
                 return Result<StockAdjustmentCreateResponseDto>.Fail("ProductId is required", ErrorType.Validation);
@@ -74,54 +75,52 @@ public class StockAdjustmentService(DataContext context) : IStockAdjustmentServi
                 return Result<StockAdjustmentCreateResponseDto>.Fail("Reason is required", ErrorType.Validation);
             }
 
-        var reason = dto.Reason.Trim();
-            if (reason.Length > 300)
-            {
-                return Result<StockAdjustmentCreateResponseDto>.Fail("Reason is too long (max 300)", ErrorType.Validation);
-            }
+            // if (reason.Length > 300)
+            // {
+            //     return Result<StockAdjustmentCreateResponseDto>.Fail("Reason is too long (max 300)", ErrorType.Validation);
+            // }
 
-        var product = await context.Products.FirstOrDefaultAsync(p => p.Id == dto.ProductId);
+            var product = await context.Products.FirstOrDefaultAsync(p => p.Id == dto.ProductId);
             if (product is null)
             {
                 return Result<StockAdjustmentCreateResponseDto>.Fail("Product not found", ErrorType.NotFound);
             }
 
-        var newQty = product.QuantityInStock + dto.AdjustmentAmount;
+            var newQty = product.QuantityInStock + dto.AdjustmentAmount;
             if (newQty < 0)
             {
                 return Result<StockAdjustmentCreateResponseDto>.Fail("Resulting stock cannot be negative", ErrorType.Conflict);
             }
 
-        var adjustment = new StockAdjustment
-        {
-            ProductId = dto.ProductId,
-            AdjustmentAmount = dto.AdjustmentAmount,
-            Reason = dto.Reason
-        };
+            var adjustment = new StockAdjustment()
+            {
+                ProductId = dto.ProductId,
+                AdjustmentAmount = dto.AdjustmentAmount,
+                Reason = dto.Reason
+            };
 
-        await context.StockAdjustments.AddAsync(adjustment);
-        product.QuantityInStock = newQty;
+            await context.StockAdjustments.AddAsync(adjustment);
+            product.QuantityInStock = newQty;
 
-        await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
-        var result = new StockAdjustmentCreateResponseDto
-        {
-            Id = adjustment.Id,
-            ProductId = adjustment.ProductId,
-            AdjustmentAmount = adjustment.AdjustmentAmount,
-            Reason = adjustment.Reason,
-            AdjustmentDate = adjustment.AdjustmentDate
-        };
+            var result = new StockAdjustmentCreateResponseDto
+            {
+                Id = adjustment.Id,
+                ProductId = adjustment.ProductId,
+                AdjustmentAmount = adjustment.AdjustmentAmount,
+                Reason = adjustment.Reason,
+                AdjustmentDate = adjustment.AdjustmentDate
+            };
 
-        return Result<StockAdjustmentCreateResponseDto>.Ok(result, "Stock adjusted successfully");
+            return Result<StockAdjustmentCreateResponseDto>.Ok(result, "Stock adjusted successfully");
 
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
-            return Result<StockAdjustmentCreateResponseDto>.Fail("Internal server error", ErrorType.Internal); 
+            Console.WriteLine(ex.Message);
+            return Result<StockAdjustmentCreateResponseDto>.Fail("Internal server error", ErrorType.Internal);
         }
-        
-
     }
     public async Task<Result<StockAdjustmentUpdateResponseDto>> UpdateItemAsync(int id, StockAdjustmentUpdateDto dto)
     {
@@ -166,7 +165,7 @@ public class StockAdjustmentService(DataContext context) : IStockAdjustmentServi
         }
         catch (System.Exception)
         {
-            return Result<StockAdjustmentUpdateResponseDto>.Fail("Internal server error", ErrorType.Internal); 
+            return Result<StockAdjustmentUpdateResponseDto>.Fail("Internal server error", ErrorType.Internal);
         }
     }
     public async Task<Result<string>> DeleteItemAsync(int id)
@@ -187,8 +186,45 @@ public class StockAdjustmentService(DataContext context) : IStockAdjustmentServi
         catch (System.Exception)
         {
             return Result<string>.Fail("Internal server error", ErrorType.Internal);
-         
+
         }
     }
+    
+    public async Task<Result<IEnumerable<StockAdjustmentHistoryDto>>> StockAdjustmentHistory(int id)
+    {
+        try
+        {
+            if (id <= 0)
+            {
+                return Result<IEnumerable<StockAdjustmentHistoryDto>>.Fail("productId is required", ErrorType.Validation);
+            }
+
+            var productExists = await context.Products.AnyAsync(p => p.Id == id);
+            if (!productExists)
+            {
+                return Result<IEnumerable<StockAdjustmentHistoryDto>>.Fail("Product not found", ErrorType.NotFound);
+            }
+
+            var items = await context.StockAdjustments
+                .AsNoTracking()
+                .Where(a => a.ProductId == id)
+                .OrderBy(a => a.AdjustmentDate)
+                .Select(a => new StockAdjustmentHistoryDto
+                {
+                    AdjustmentDate = a.AdjustmentDate,
+                    Amount = a.AdjustmentAmount,
+                    Reason = a.Reason
+                })
+                .ToListAsync();
+
+            return Result<IEnumerable<StockAdjustmentHistoryDto>>.Ok(items);
+        }
+        catch
+        {
+            return Result<IEnumerable<StockAdjustmentHistoryDto>>.Fail("Internal server error", ErrorType.Internal);
+        }
+    }
+
+
     
 }

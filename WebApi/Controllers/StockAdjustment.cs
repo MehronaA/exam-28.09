@@ -33,6 +33,23 @@ public class StockAdjustment(IStockAdjustmentService service ):ControllerBase
         }
         return Ok(result.Data);
     }
+    [HttpGet("stock-adjustment-history")]
+    public async Task<IActionResult> GetHistory([FromQuery] int productId)
+    {
+        var result = await service.StockAdjustmentHistory(productId);
+
+        if (!result.IsSuccess)
+        {
+            return result.ErrorType switch
+            {
+                ErrorType.Validation => BadRequest(result),
+                ErrorType.NotFound => NotFound(result),
+                _ => StatusCode(StatusCodes.Status500InternalServerError, result)
+            };
+        }
+
+        return Ok(result.Data);
+    }
     [HttpPost]
     public async Task<IActionResult> CreateItemAsync(StockAdjustmentCreateDto dto)
     {
