@@ -1,0 +1,22 @@
+﻿@page "/categories/delete/{id:int}"
+@using Domain.Entities
+@model RazorApp.Pages.Categories.Delete
+
+
+
+<h3 class="mb-3">Удаление категории</h3>
+
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <p class="mb-2">Вы действительно хотите удалить эту категорию?</p>
+      
+
+        <form method="post" class="d-flex gap-2">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">Удалить</button>
+            <a asp-page="/Categories/Index" class="btn btn-outline-secondary">Назад</a>
+        </form>
+    </div>
+</div>

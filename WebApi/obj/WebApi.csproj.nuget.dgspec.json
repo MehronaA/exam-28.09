@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Sohibjon\\Desktop\\Exam27\\WebApi\\WebApi.csproj": {}
+    "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\WebApi\\WebApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Domain\\Domain.csproj": {
+    "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Domain\\Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Domain\\Domain.csproj",
+        "projectUniqueName": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Domain\\Domain.csproj",
         "projectName": "Domain",
-        "projectPath": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Domain\\Domain.csproj",
+        "projectPath": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Domain\\Domain.csproj",
         "packagesPath": "C:\\Users\\Sohibjon\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Domain\\obj\\",
+        "outputPath": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Sohibjon\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -63,14 +63,14 @@
         }
       }
     },
-    "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Infrastructure\\Infrastructure.csproj": {
+    "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Infrastructure\\Infrastructure.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Infrastructure\\Infrastructure.csproj",
+        "projectUniqueName": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Infrastructure\\Infrastructure.csproj",
         "projectName": "Infrastructure",
-        "projectPath": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Infrastructure\\Infrastructure.csproj",
+        "projectPath": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Infrastructure\\Infrastructure.csproj",
         "packagesPath": "C:\\Users\\Sohibjon\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Infrastructure\\obj\\",
+        "outputPath": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Sohibjon\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -85,8 +85,8 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Domain\\Domain.csproj": {
-                "projectPath": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Domain\\Domain.csproj"
+              "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Domain\\Domain.csproj": {
+                "projectPath": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Domain\\Domain.csproj"
               }
             }
           }
@@ -136,14 +136,14 @@
         }
       }
     },
-    "C:\\Users\\Sohibjon\\Desktop\\Exam27\\WebApi\\WebApi.csproj": {
+    "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\WebApi\\WebApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\WebApi\\WebApi.csproj",
+        "projectUniqueName": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\WebApi\\WebApi.csproj",
         "projectName": "WebApi",
-        "projectPath": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\WebApi\\WebApi.csproj",
+        "projectPath": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\WebApi\\WebApi.csproj",
         "packagesPath": "C:\\Users\\Sohibjon\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\WebApi\\obj\\",
+        "outputPath": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\WebApi\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Sohibjon\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -158,8 +158,8 @@
           "net9.0": {
             "targetAlias": "net9.0",
             "projectReferences": {
-              "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Infrastructure\\Infrastructure.csproj": {
-                "projectPath": "C:\\Users\\Sohibjon\\Desktop\\Exam27\\Infrastructure\\Infrastructure.csproj"
+              "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Infrastructure\\Infrastructure.csproj": {
+                "projectPath": "C:\\Users\\Sohibjon\\Desktop\\exam-28.09\\Infrastructure\\Infrastructure.csproj"
               }
             }
           }

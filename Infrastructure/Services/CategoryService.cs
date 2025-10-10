@@ -17,26 +17,31 @@ public class CategoryService(DataContext context) : ICategoryService
 {
 
 
-    public async Task<PageResult<IEnumerable<CategoryGetDto>>> GetFilteredItemsAsync(CategoryFilter filter)
+    public async Task<Result<IEnumerable<CategoryGetDto>>> GetItemsAsync()
     {
 
-        var query = context.Categories.AsQueryable();
-        var totalCount = query.Count();
-        if (filter.Keyword != null)
-        {
-            query = query.Where(c => EF.Functions.Like(c.Name.ToLower(), $"%{filter.Keyword}%"));
-        }
+        // var query = context.Categories.AsQueryable();
+        // var totalCount = query.Count();
+        // if (filter.Keyword != null)
+        // {
+        //     query = query.Where(c => EF.Functions.Like(c.Name.ToLower(), $"%{filter.Keyword}%"));
+        // }
 
-        var items = await query
-        .Skip((filter.Page - 1) * filter.Size)
-        .Take(filter.Size)
-        .Select(c => new CategoryGetDto()
+        // var items = await query
+        // .Skip((filter.Page - 1) * filter.Size)
+        // .Take(filter.Size)
+        // .Select(c => new CategoryGetDto()
+        // {
+        //     Id = c.Id,
+        //     Name = c.Name
+        // }).ToListAsync();
+        // return PageResult<IEnumerable<CategoryGetDto>>.Ok(items, filter.Page, filter.Size, totalCount);
+        var items = await context.Categories.Select(c => new CategoryGetDto()
         {
             Id = c.Id,
             Name = c.Name
         }).ToListAsync();
-        return PageResult<IEnumerable<CategoryGetDto>>.Ok(items, filter.Page, filter.Size, totalCount);
-
+        return Result<IEnumerable<CategoryGetDto>>.Ok(items);
     }
     public async Task<Result<CategoryGetDto>> GetItemByIdAsync(int id)
     {
